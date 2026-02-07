@@ -1,10 +1,5 @@
 # full-crud
 
-[![npm version](https://img.shields.io/npm/v/full-crud.svg?style=flat-square)](https://www.npmjs.com/package/full-crud)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/node/v/full-crud.svg?style=flat-square)](https://nodejs.org)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
-
 ## Automated CRUD API Generator for Express and Mongoose
 
 `full-crud` is a high-level utility that eliminates repetitive CRUD controller boilerplate in Express.js applications using Mongoose. Generate complete, production-ready REST APIs with pagination, filtering, and field selection in a single line of code.
