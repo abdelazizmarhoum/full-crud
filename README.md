@@ -25,8 +25,8 @@ npm install full-crud
 ```
 
 **Peer Dependencies:**
-- `express` ^4.18.0
-- `mongoose` ^7.0.0
+- `express` any version
+- `mongoose` any version
 
 ---
 
