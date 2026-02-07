@@ -1,0 +1,34 @@
+{
+  "name": "full-crud",
+  "version": "1.0.0",
+  "description": "Zero-boilerplate CRUD factory for Express and Mongoose. Autowire your entire API in one line.",
+  "main": "src/index.js",
+  "files": [
+    "src",
+    "index.d.ts",
+    "README.md"
+  ],
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "express",
+    "mongoose",
+    "crud",
+    "rest",
+    "api",
+    "factory",
+    "autowire",
+    "boilerplate",
+    "backend",
+    "controller",
+    "mern"
+  ],
+  "author": "MARHOUM Abdelaziz",
+  "license": "MIT",
+  "peerDependencies": {
+    "express": "^4.18.0",
+    "mongoose": "^7.0.0"
+  }
+}
