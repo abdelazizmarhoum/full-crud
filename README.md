@@ -1,108 +1,197 @@
-# 🚀 full-crud
+# full-crud
 
 [![npm version](https://img.shields.io/npm/v/full-crud.svg?style=flat-square)](https://www.npmjs.com/package/full-crud)
-[![license](https://img.shields.io/npm/l/full-crud.svg?style=flat-square)](https://github.com/yourusername/full-crud/blob/master/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/node/v/full-crud.svg?style=flat-square)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-**The ultimate "Bolierplate Annihilator" for Mongoose & Express.**  
-Generate production-ready CRUD APIs with **one single line of code**.
+## Automated CRUD API Generator for Express and Mongoose
+
+`full-crud` is a high-level utility that eliminates repetitive CRUD controller boilerplate in Express.js applications using Mongoose. Generate complete, production-ready REST APIs with pagination, filtering, and field selection in a single line of code.
 
 ---
 
-## 🌟 The Philosophy
-Stop copy-pasting the same 50 lines of CRUD logic for every model in your project. `full-crud` provides a high-level factory that understands your Mongoose models and builds the Express routes, handlers, pagination, and filtering for you—automatically.
+## Table of Contents
 
-- **Zero-Boilerplate**: Autowire your entire `models/` folder in one second.
-- **Fluent API**: Chain hooks and configuration in a beautiful "one-liner" style.
-- **Production Ready**: Built-in total items count, standardized error handling, and field selection.
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [API Reference](#api-reference)
+- [Configuration Options](#configuration-options)
+- [Error Handling](#error-handling)
+- [License](#license)
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```bash
 npm install full-crud
 ```
-*Requires `express` and `mongoose` as peer dependencies.*
+
+**Peer Dependencies:**
+- `express` ^4.18.0
+- `mongoose` ^7.0.0
 
 ---
 
-## 🔥 Feature 1: The "Magic" Autowire
-The fastest way to backend existence. Point `full-crud` to your models folder and watch your API come to life.
+## Quick Start
+
+### 1. Automatic Model Registration (Autowire)
+
+Register all Mongoose models in a directory as REST endpoints automatically:
 
 ```javascript
-const { autowire } = require('full-crud');
 const express = require('express');
+const mongoose = require('mongoose');
+const { autowire } = require('full-crud');
 
 const app = express();
 app.use(express.json());
 
-// 🪄 This one line creates /api/users, /api/products, /api/orders...
-autowire(app, './models'); 
+// Connect to your MongoDB database
+mongoose.connect('mongodb://localhost:27017/myapp');
 
-app.listen(3000, () => console.log('API is alive!'));
+// Automatically creates CRUD endpoints for all models in ./models
+// Example: User model -> GET /api/users, POST /api/users, etc.
+autowire(app, './models');
+
+app.listen(3000, () => console.log('Server running on port 3000'));
 ```
 
----
+### 2. Manual Model Mounting
 
-## � Feature 2: Manual Mounting
-Need more control? Mount specific models to specific paths in one line.
+Mount specific models to custom paths with additional configuration:
 
 ```javascript
 const { mountCrud } = require('full-crud');
-const Client = require('./models/Client');
+const User = require('./models/User');
 
-// Registers GET, POST, PUT, DELETE /api/clients instantly
-mountCrud(app, '/api/clients', Client);
+// Register User model at /api/users
+mountCrud(app, '/api/users', User, {
+  pagination: { defaultLimit: 25, maxLimit: 100 }
+});
 ```
 
----
+### 3. Standalone Controller Builder
 
-## � Feature 3: Chainable Builder API
-Even advanced logic stays as a "one-liner". Our fluent builder lets you inject hooks and middleware without breaking the flow.
+Create reusable controller instances with a fluent API:
 
 ```javascript
 const { makeCrud } = require('full-crud');
+const User = require('./models/User');
 
+// Create a fully configured controller
 const userController = makeCrud(User)
+  .pagination({ defaultLimit: 50 })
   .beforeCreate(async (data) => {
-    data.password = await hash(data.password);
+    // Hash password before saving
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
     return data;
-  })
-  .afterCreate(sendWelcomeEmail)
-  .pagination({ defaultLimit: 20 })
-  .only(['getAll', 'getById']); // Restrict operations
+  });
+
+// Use in your Express routes
+app.get('/api/users', userController.getAll);
+app.post('/api/users', userController.create);
 ```
 
 ---
 
-## 🔍 Smart API Features
-Your generated API is automatically supercharged with:
+## Features
 
-| Query Param | Action | Example |
-|---|---|---|
-| `?page=x` | Pagination | `/api/users?page=2` |
-| `?limit=x` | Custom Page Size | `/api/users?limit=50` |
-| `?sort=field` | Sorting | `/api/users?sort=-createdAt` |
-| `?fields=a,b` | Field Selection | `/api/users?fields=name,email` |
-| `?name=John` | Filtering | Any model field works as a filter! |
+### Automated CRUD Operations
+- **GET** `/resource` - Retrieve all resources with pagination & filtering
+- **GET** `/resource/:id` - Retrieve single resource by ID
+- **POST** `/resource` - Create new resource
+- **PUT** `/resource/:id` - Update existing resource
+- **DELETE** `/resource/:id` - Delete resource
+
+### Built-in Query Parameters
+All list endpoints (`GET /resource`) support the following query parameters:
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `page` | Page number for pagination | `?page=2` |
+| `limit` | Items per page | `?limit=50` |
+| `sort` | Sort by field (prefix with `-` for descending) | `?sort=-createdAt` |
+| `fields` | Select specific fields | `?fields=name,email,createdAt` |
+| `[field]` | Filter by any model field | `?status=active&category=electronics` |
+
+### Automatic Response Format
+All responses follow a consistent format:
+
+```javascript
+// Success response (GET ALL)
+{
+  "success": true,
+  "count": 20,
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "totalPages": 5,
+    "totalItems": 100
+  },
+  "data": [ /* array of resources */ ]
+}
+
+// Success response (GET BY ID / CREATE)
+{
+  "success": true,
+  "data": { /* resource data */ }
+}
+```
 
 ---
 
-## 🛠️ API Reference
+## API Reference
 
-### `autowire(app, folderPath, options)`
-Registers all Mongoose models in a directory as pluralized routes.
-- `prefix`: URL prefix (default: `/api`)
-- `logging`: Show the route table in terminal (default: `true`)
+### `autowire(app, modelsPath, options)`
+Automatically registers CRUD routes for all Mongoose models in a directory.
+
+**Options:**
+- `prefix` (String): URL prefix (default: `/api`)
+- `logging` (Boolean): Enable route table logging in terminal (default: `true`)
 
 ### `mountCrud(app, path, Model, options)`
-Registers all CRUD routes for a single model at a specific path.
+Mounts CRUD operations for a single model at a specified path.
 
-### `makeCrud(Model)`
-Returns the fluent builder to create a standalone controller.
+### `makeCrud(Model, options)`
+Creates a CRUD controller instance with a fluent API for method chaining.
 
 ---
 
-## ⚖️ License
+## Configuration Options
+
+### Fluent API Methods
+```javascript
+const controller = makeCrud(User)
+  .pagination({ defaultLimit: 30, maxLimit: 100 }) // Configure pagination
+  .only(['getAll', 'getById', 'create'])           // Enable only specific operations
+  .middleware('create', [auth, validateUser])      // Add middleware per operation
+  .beforeCreate(async (data, req) => data)         // Add pre-save hook
+  .afterCreate(async (doc, req) => {})             // Add post-save hook
+  .beforeUpdate(async (data, req) => data);        // Add pre-update hook
+```
+
+---
+
+## Error Handling
+
+`full-crud` provides comprehensive error handling for Mongoose validation, cast errors (invalid IDs), and duplicate entries:
+
+```javascript
+// Error response
+{
+  "success": false,
+  "error": "Validation Error",
+  "details": "User validation failed: email: Path `email` is required."
+}
+```
+
+---
+
+## License
+
 MIT © [MARHOUM Abdelaziz](https://github.com/abdelazizmarhoum)
